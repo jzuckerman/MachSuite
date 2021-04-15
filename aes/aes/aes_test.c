@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "aes.h"
-
+#define PLAINTEXT "abcdefghijklmnop"
 #define DUMP(s, i, buf, sz)  {printf(s);                   \
                               for (i = 0; i < (sz);i++)    \
                                   printf("%02x ", buf[i]); \
@@ -27,13 +27,18 @@
 
 int main (int argc, char *argv[])
 {
-    aes256_context ctx; 
-    uint8_t key[32];
+    aes128_context ctx; 
+    uint8_t key[16];
+    const char *plaintext = PLAINTEXT;
     uint8_t in_buf[16], out_buf[16], i;
+
+    if (strlen(plaintext) != 16)
+        printf("invalid plain text provided\n");
 
     /* put a test vector */
     for (i = 0; i < sizeof(in_buf);i++){
         in_buf[i] = i * 16 + i;
+        //in_buf[i] = (uint8_t) plaintext[i]; 
     }
 
     for (i = 0; i < sizeof(key);i++){
@@ -46,7 +51,7 @@ int main (int argc, char *argv[])
     printf("---\n");
 
     //aes256_init(&ctx, key);
-    aes256_encrypt_ecb(key, in_buf, out_buf);
+    aes128_encrypt_ecb(key, in_buf, out_buf);
 
     DUMP("enc: ", i, out_buf, sizeof(out_buf));
     printf("tst: 8e a2 b7 ca 51 67 45 bf ea fc 49 90 4b 49 60 89\n");

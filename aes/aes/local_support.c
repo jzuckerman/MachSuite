@@ -5,7 +5,7 @@ int INPUT_SIZE = sizeof(struct bench_args_t);
 
 void run_benchmark( void *vargs ) {
   struct bench_args_t *args = (struct bench_args_t *)vargs;
-  aes256_encrypt_ecb( &(args->ctx), args->k, args->buf );
+  aes128_encrypt_ecb(args->k, args->in_buf, args->out_buf);
 }
 
 /* Input format:
@@ -27,7 +27,7 @@ void input_to_data(int fd, void *vdata) {
   parse_uint8_t_array(s, data->k, 32);
   // Section 2: input-text
   s = find_section_start(p,2);
-  parse_uint8_t_array(s, data->buf, 16);
+  parse_uint8_t_array(s, data->in_buf, 16);
   free(p);
 }
 
@@ -38,7 +38,7 @@ void data_to_input(int fd, void *vdata) {
   write_uint8_t_array(fd, data->k, 32);
   // Section 2
   write_section_header(fd);
-  write_uint8_t_array(fd, data->buf, 16);
+  write_uint8_t_array(fd, data->in_buf, 16);
 }
 
 /* Output format:
@@ -56,7 +56,7 @@ void output_to_data(int fd, void *vdata) {
   p = readfile(fd);
   // Section 1: output-text
   s = find_section_start(p,1);
-  parse_uint8_t_array(s, data->buf, 16);
+  parse_uint8_t_array(s, data->out_buf, 16);
   free(p);
 }
 
@@ -64,7 +64,7 @@ void data_to_output(int fd, void *vdata) {
   struct bench_args_t *data = (struct bench_args_t *)vdata;
   // Section 1
   write_section_header(fd);
-  write_uint8_t_array(fd, data->buf, 16);
+  write_uint8_t_array(fd, data->out_buf, 16);
 }
 
 int check_data( void *vdata, void *vref ) {
@@ -73,7 +73,7 @@ int check_data( void *vdata, void *vref ) {
   int has_errors = 0;
 
   // Exact compare encrypted output buffers
-  has_errors |= memcmp(&data->buf, &ref->buf, 16*sizeof(uint8_t));
+  has_errors |= memcmp(&data->out_buf, &ref->out_buf, 16*sizeof(uint8_t));
 
   // Return true if it's correct.
   return !has_errors;
