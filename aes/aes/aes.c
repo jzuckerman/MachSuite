@@ -154,14 +154,25 @@ void aes_expandEncKey(uint8_t *k, uint8_t *rc)
 {
     register uint8_t i;
 
-    k[0] ^= rj_sbox(k[29]) ^ (*rc);
-    k[1] ^= rj_sbox(k[30]);
-    k[2] ^= rj_sbox(k[31]);
-    k[3] ^= rj_sbox(k[28]);
+//    int x;
+//    for (x=0; x<16; x++) {
+//        printf("key_b= %x \n ", (int) k[x]);
+//    }
+
+    k[0] ^= rj_sbox(k[13]) ^ (*rc);
+    k[1] ^= rj_sbox(k[14]);
+    k[2] ^= rj_sbox(k[15]);
+    k[3] ^= rj_sbox(k[12]);
     *rc = F( *rc);
 
     exp1 : for(i = 4; i < 16; i += 4)  k[i] ^= k[i-4],   k[i+1] ^= k[i-3],
         k[i+2] ^= k[i-2], k[i+3] ^= k[i-1];
+
+    //int x;
+//    for (x=0; x<16; x++) {
+//        printf("key_a= %x \n ", (int) k[x]);
+//    }
+    
     //k[16] ^= rj_sbox(k[12]);
     //k[17] ^= rj_sbox(k[13]);
     //k[18] ^= rj_sbox(k[14]);
@@ -188,23 +199,31 @@ void aes128_encrypt_ecb(uint8_t k[16], uint8_t in_buf[16], uint8_t out_buf[16])
     ecb1 : for (i = 0; i < sizeof(ctx.key); i++){
         ctx.enckey[i] = ctx.deckey[i] = k[i];
     }
-    ecb2 : for (i = 4;--i;){
-        aes_expandEncKey(ctx.deckey, &rcon);
-    }
+    //ecb2 : for (i = 4;--i;){
+    //    aes_expandEncKey(ctx.deckey, &rcon);
+    //}
 
     //DEC
     aes_addRoundKey_cpy(buf, ctx.enckey, ctx.key);
     ecb3 : for(i = 1, rcon = 1; i < 10; ++i)
     {
+    //    int k;
+        printf("round %d\n", i); 
         aes_subBytes(buf);
         aes_shiftRows(buf);
         aes_mixColumns(buf);
-        if( i & 1 ) aes_addRoundKey( buf, &ctx.key[16]);
-        else aes_expandEncKey(ctx.key, &rcon), aes_addRoundKey(buf, ctx.key);
+    //    for (k=0; k<16; k++) {
+    //        printf("round %d \n buf=%x \n ", i, (int) buf[k]);
+    //    } 
+    //    if( i & 1 ) aes_addRoundKey( buf, &ctx.key[16]);
+    //    else aes_expandEncKey(ctx.key, &rcon), aes_addRoundKey(buf, ctx.key);
+        aes_expandEncKey(ctx.key, &rcon);
+        aes_addRoundKey(buf, ctx.key);
     }
     aes_subBytes(buf);
     aes_shiftRows(buf);
     aes_expandEncKey(ctx.key, &rcon);
+
     aes_addRoundKey(buf, ctx.key);
     outcpy: for (i = 0; i < 16; i++) {
         out_buf[i] = buf[i];
